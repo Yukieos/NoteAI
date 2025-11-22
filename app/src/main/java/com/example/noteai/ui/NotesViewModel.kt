@@ -74,12 +74,14 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
             if (query.isBlank()) {
                 //如果搜索框是空的就return all notes
                 noteDao.getAllNotesWithTags().collect { notesList ->
-                    _notes.value = notesList
+                    allNotesList = notesList
+                    applyFilter() //应用tag过滤
                 }
             } else {
                 //不是空的去db搜索
                 noteDao.searchNotesWithTags(query).collect { notesList ->
-                    _notes.value = notesList
+                    allNotesList = notesList
+                    applyFilter() //应用tag过滤
                 }
             }
         }
@@ -90,16 +92,17 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
         title: String,
         content: String,
         tagsInput: List<String>,
+        tagColors: Map<String, String>? = null, //因为tag有颜色嘛，所以我们保存笔记的时候同时也要保存一下不同标签的颜色
         createdAt: Long? = null
     ) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             //对用户输入的tag名称做去重
             val trimmedTags = tagsInput.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
-            val tagEntities = trimmedTags.map { Tag(name = it) }
-            
-            //判断是update还是insert
-            val note = if (id == null) {
+            val tagEntities = trimmedTags.map { tagName -> val color = tagColors?.get(tagName) ?: "#E9E8E6" //默认颜色灰色，不能不选颜色吧
+                Tag(name = tagName, color = color)
+            }
+            val note = if (id == null) { 
                 Note(title = title, content = content, createdAt = now, updatedAt = now)
             } else {
                 Note(
@@ -110,7 +113,7 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
                     updatedAt = now
                 )
             }
-
+    
             noteDao.upsertNoteWithTags(note, tagEntities)
         }
     }
@@ -120,10 +123,39 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
             noteDao.deleteNoteWithTags(note)
         }
     }
+
+    //之前的那个delete函数很基础，就删掉当前那个笔记还有相关表格，这个就是可以批量的删除选中的笔记，多了一个for loop去找到就是多个要删除的笔记
+    fun deleteNotes(noteIds: List<Long>) {
+        viewModelScope.launch {
+            noteIds.forEach { noteId ->
+                val note = noteDao.getNoteWithTags(noteId)
+                note?.let {
+                    noteDao.deleteNoteWithTags(it.note)
+                }
+            }
+        }
+    }
     
     fun deleteTag(tag: Tag) {
         viewModelScope.launch {
+            //删除tag之前，如果这个tag在filter的列表里我们就移除
+            selectedTags.remove(tag.name)
             noteDao.deleteTag(tag)
+            applyFilter() //重新应用filter
+        }
+    }
+
+    //从某个笔记删除某个tag
+    fun removeTagFromNote(note: Note, tagName: String) {
+        viewModelScope.launch {
+            //获取当前笔记的所有tag
+            val noteWithTags = noteDao.getNoteWithTags(note.id)
+            noteWithTags?.let {
+                //过滤掉要删除的tag
+                val remainingTags = it.tags.filter { tag -> tag.name != tagName }
+                //重新保存笔记和tag
+                noteDao.upsertNoteWithTags(note, remainingTags)
+            }
         }
     }
     
