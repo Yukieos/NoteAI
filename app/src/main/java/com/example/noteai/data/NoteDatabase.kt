@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Note::class, Tag::class, NoteTagCross::class],
-    version = 1,
+    version = 2, //添加了tag颜色字段
     exportSchema = false
 )
 abstract class NoteDatabase : RoomDatabase() {

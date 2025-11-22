@@ -42,6 +42,14 @@ interface NoteDao {
     @Query("SELECT * FROM tags WHERE name IN (:names)")
     suspend fun getTagsByNames(names: List<String>): List<Tag>
 
+    //获取所有标签，按名字排序
+    @Query("SELECT * FROM tags ORDER BY name ASC")
+    fun getAllTags(): Flow<List<Tag>>
+
+    //删除标签
+    @Delete
+    suspend fun deleteTag(tag: Tag)
+
     @Transaction
     @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
     suspend fun getNoteWithTags(noteId: Long): NoteWithTags?
