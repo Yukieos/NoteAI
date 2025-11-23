@@ -28,7 +28,7 @@ class NoteAdapter(
 
     //当recyclerview要新的一行view用这个方法，必须使用网格布局。我一开始其实有list布局的，后面实在觉得list布局好丑，我可以参考市面上这些app笔记就是用一个sidebar展现全部note也算是一种list view了吧
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_note_grid, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.note_item_grid, parent, false)
         return NoteViewHolder(view, onClick, onTagRemove, onLongClick)
     }
 

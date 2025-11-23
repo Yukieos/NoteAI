@@ -19,7 +19,7 @@ class SidebarNoteAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_sidebar_note, parent, false)
+            .inflate(R.layout.sidebar_note_item, parent, false)
         return NoteViewHolder(view, onClick)
     }
 

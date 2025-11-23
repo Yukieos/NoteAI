@@ -37,7 +37,7 @@ class NoteDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_note_detail)
+        setContentView(R.layout.note_detail)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -111,7 +111,7 @@ class NoteDetailActivity : AppCompatActivity() {
     }
     //显示添加标签对话框
     private fun showAddTagDialog(chipGroup: ChipGroup) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_tag, null)
+        val dialogView = layoutInflater.inflate(R.layout.add_tag, null)
         val inputTagName = dialogView.findViewById<EditText>(R.id.inputTagName)
         val chipGroupExisting = dialogView.findViewById<ChipGroup>(R.id.chipGroupExistingTags)
 

@@ -2,4 +2,22 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="primary_text">#37352F</color>
+    <color name="secondary_text">#787774</color>
+    <color name="accent">#2383E2</color>
+    <color name="tag_background">#E9E8E6</color>
+    <color name="tag_text">#37352F</color>
+    <color name="search_background">#EFEEEB</color>
+    
+    <!-- 标签颜色选项 好看的柔和色 -->
+    <color name="tag_gray">#E9E8E6</color>
+    <color name="tag_blue">#D3E5EF</color>
+    <color name="tag_green">#D4ECD3</color>
+    <color name="tag_yellow">#FDECC8</color>
+    <color name="tag_orange">#FADEC9</color>
+    <color name="tag_red">#FFE2DD</color>
+    <color name="tag_pink">#F5E0E9</color>
+    <color name="tag_purple">#E8DEEE</color>
 </resources>
