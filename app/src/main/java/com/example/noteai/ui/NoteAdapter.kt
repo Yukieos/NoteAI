@@ -12,6 +12,7 @@ import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
 import com.example.noteai.R
 import com.example.noteai.data.NoteWithTags
+import com.example.noteai.markdown.MarkdownParser
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import java.util.Date
@@ -25,11 +26,12 @@ class NoteAdapter(
     private var notesList: List<NoteWithTags> = emptyList()
     private var isSelectionMode = false //我们需要确定当前的一个状态是多选还是正常点进文件就可以看到这个具体内容
     private var selectedNotes = setOf<Long>() //选中的note id
+    private val markdownParser = MarkdownParser() //用来处理 markdown 的解析
 
     //当recyclerview要新的一行view用这个方法，必须使用网格布局。我一开始其实有list布局的，后面实在觉得list布局好丑，我可以参考市面上这些app笔记就是用一个sidebar展现全部note也算是一种list view了吧
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.note_item_grid, parent, false)
-        return NoteViewHolder(view, onClick, onTagRemove, onLongClick)
+        return NoteViewHolder(view, onClick, onTagRemove, onLongClick, markdownParser)
     }
 
     //recycler需要把第position条数据显示出来，然后我们调取datasource
@@ -60,7 +62,8 @@ class NoteAdapter(
         itemView: View,
         private val onClick: (NoteWithTags) -> Unit, //新变量设置原因我上面写了
         private val onTagRemove: (NoteWithTags, String) -> Unit,
-        private val onLongClick: (NoteWithTags) -> Unit
+        private val onLongClick: (NoteWithTags) -> Unit,
+        private val markdownParser: MarkdownParser //拿到 markdown 解析器来处理预览
     ) : RecyclerView.ViewHolder(itemView) {
         private val title: TextView = itemView.findViewById(R.id.textTitle)
         private val content: TextView = itemView.findViewById(R.id.textContentPreview)
@@ -70,7 +73,10 @@ class NoteAdapter(
         fun bind(item: NoteWithTags, isSelectionMode: Boolean, isSelected: Boolean) {
             //我这里用了ifBlank是因为如果标题很空就要显示默认文案，空UI真感觉太丑了（
             title.text = item.note.title.ifBlank { "无标题" }
-            content.text = item.note.content.ifBlank { "无内容" }
+            
+            //用 markdown 解析器把内容转成纯文本预览
+            val plainTextPreview = markdownParser.parseToPlainText(item.note.content)
+            content.text = plainTextPreview.ifBlank { "无内容" }
 
             //现在我们是可以通过这个updatedAt来显示笔记更新时间，我后期可能想要通过这个方法来显示哪些笔记recently被改变过（我们后面可以讨论笔记排序是按照时间还是标题）
             val formattedDate = DateFormat.getDateFormat(itemView.context).format(Date(item.note.updatedAt))

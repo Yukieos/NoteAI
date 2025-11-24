@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -15,11 +16,16 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.example.noteai.data.NoteDatabase
 import com.example.noteai.data.NoteWithTags
+import com.example.noteai.markdown.MarkdownBlockParser
+import com.example.noteai.markdown.MarkdownParser
 import com.example.noteai.ui.NotesViewModel
 import com.example.noteai.ui.NotesViewModelFactory
+import com.example.noteai.ui.MarkdownContentAdapter
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.launch
@@ -33,6 +39,10 @@ class NoteDetailActivity : AppCompatActivity() {
     private var existingNote: NoteWithTags? = null //如果是编辑旧笔记就放这
 
     private val defaultColor = "#E9E8E6" //我给一个默认颜色，后面parse失败就回退到它
+    private val markdownParser = MarkdownParser() //用来把 markdown 转成富文本
+    private val markdownBlockParser = MarkdownBlockParser() //用来把 markdown 分解成块，高效渲染
+    private var isPreviewMode = false //记录当前是编辑还是预览模式
+    private var contentAdapter: MarkdownContentAdapter? = null //预览模式用的适配器
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,13 +56,40 @@ class NoteDetailActivity : AppCompatActivity() {
 
         val titleInput = findViewById<EditText>(R.id.inputTitle)
         val contentInput = findViewById<EditText>(R.id.inputContent)
+        val previewContent = findViewById<TextView>(R.id.previewContent)
         val saveButton = findViewById<Button>(R.id.buttonSave)
         val deleteButton = findViewById<ImageButton>(R.id.buttonDelete)
         val backButton = findViewById<ImageButton>(R.id.buttonBack)
+        val togglePreviewButton = findViewById<ImageButton>(R.id.buttonTogglePreview)
         val chipGroup = findViewById<ChipGroup>(R.id.chipGroupTags)
         val addTagButton = findViewById<Button>(R.id.buttonAddTag)
+        
+        // 高效预览：用 RecyclerView 替代 TextView，支持虚拟滚动
+        val recyclerPreview = findViewById<RecyclerView>(R.id.recyclerContentPreview)
+        if (recyclerPreview != null) {
+            contentAdapter = MarkdownContentAdapter(emptyList())
+            recyclerPreview.adapter = contentAdapter
+        }
 
         backButton.setOnClickListener { finish() }
+        
+        //眼睛按钮：点击切换编辑/预览模式
+        togglePreviewButton.setOnClickListener {
+            isPreviewMode = !isPreviewMode
+            updatePreviewMode(contentInput, previewContent, recyclerPreview, togglePreviewButton)
+        }
+        
+        //编辑内容时实时更新预览
+        contentInput.doOnTextChanged { text, _, _, _ ->
+            if (isPreviewMode && recyclerPreview != null) {
+                //用高效的块解析器，而不是一次性渲染整个文档
+                val blocks = markdownBlockParser.parseToBlocks(text?.toString().orEmpty())
+                contentAdapter = MarkdownContentAdapter(blocks)
+                recyclerPreview.adapter = contentAdapter
+            } else if (isPreviewMode) {
+                previewContent.text = markdownParser.parse(text?.toString().orEmpty())
+            }
+        }
 
         //从Intent获取note id，如果有id说明是编辑，没有就是新建
         val noteId = intent.getLongExtra(EXTRA_NOTE_ID, 0L).takeIf { it != 0L }
@@ -215,6 +252,39 @@ class NoteDetailActivity : AppCompatActivity() {
             hex.toColorInt()
         } catch (e: Exception) {
             defaultColor.toColorInt()
+        }
+    }
+    
+    //切换编辑和预览模式。预览模式下显示 markdown 渲染的富文本，编辑模式下编辑源代码
+    private fun updatePreviewMode(
+        contentInput: EditText,
+        previewContent: TextView,
+        recyclerPreview: RecyclerView?,
+        togglePreviewButton: ImageButton
+    ) {
+        if (isPreviewMode) {
+            //进入预览模式：隐藏编辑框，显示预览
+            contentInput.isVisible = false
+            previewContent.isVisible = false
+            togglePreviewButton.setImageResource(android.R.drawable.ic_menu_edit) //切换成编辑图标
+            
+            //高效渲染：用 RecyclerView 显示
+            if (recyclerPreview != null) {
+                recyclerPreview.isVisible = true
+                val blocks = markdownBlockParser.parseToBlocks(contentInput.text.toString())
+                contentAdapter = MarkdownContentAdapter(blocks)
+                recyclerPreview.adapter = contentAdapter
+            } else {
+                // 备用方案：用 TextView
+                previewContent.isVisible = true
+                previewContent.text = markdownParser.parse(contentInput.text.toString())
+            }
+        } else {
+            //回到编辑模式：显示编辑框，隐藏预览
+            contentInput.isVisible = true
+            previewContent.isVisible = false
+            if (recyclerPreview != null) recyclerPreview.isVisible = false
+            togglePreviewButton.setImageResource(android.R.drawable.ic_menu_view) //切换成眼睛图标
         }
     }
 
