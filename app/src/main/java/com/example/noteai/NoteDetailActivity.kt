@@ -19,6 +19,8 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.example.noteai.ai.AiClient
+import com.example.noteai.ai.OpenAiClient
 import com.example.noteai.data.NoteDatabase
 import com.example.noteai.data.NoteWithTags
 import com.example.noteai.markdown.MarkdownBlockParser
@@ -34,6 +36,7 @@ class NoteDetailActivity : AppCompatActivity() {
     private val viewModel: NotesViewModel by viewModels {
         NotesViewModelFactory(NoteDatabase.getInstance(applicationContext).noteDao())
     }
+    private val aiClient: AiClient by lazy { OpenAiClient() }// AI客户端（懒加载）
     private val currentTags = mutableListOf<String>()
     private val tagColors = mutableMapOf<String, String>()
     private var existingNote: NoteWithTags? = null //如果是编辑旧笔记就放这
@@ -63,7 +66,8 @@ class NoteDetailActivity : AppCompatActivity() {
         val togglePreviewButton = findViewById<ImageButton>(R.id.buttonTogglePreview)
         val chipGroup = findViewById<ChipGroup>(R.id.chipGroupTags)
         val addTagButton = findViewById<Button>(R.id.buttonAddTag)
-        
+        val summarizeButton = findViewById<Button>(R.id.buttonSummarize)
+        val aiTagsButton = findViewById<Button>(R.id.buttonAiTags)
         // 高效预览：用 RecyclerView 替代 TextView，支持虚拟滚动
         val recyclerPreview = findViewById<RecyclerView>(R.id.recyclerContentPreview)
         if (recyclerPreview != null) {
@@ -126,6 +130,16 @@ class NoteDetailActivity : AppCompatActivity() {
         saveButton.setOnClickListener {
             val title = titleInput.text.toString()
             val content = contentInput.text.toString()
+            if (title.isBlank() && content.isBlank()) {
+                Toast.makeText(this, "请先写点内容，再生成摘要～", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+
+
+
+
+
             viewModel.saveNote(
                 id = existingNote?.note?.id,
                 title = title,
@@ -137,6 +151,95 @@ class NoteDetailActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.save, Toast.LENGTH_SHORT).show()
             finish()
         }
+        // AI 摘要
+        summarizeButton.setOnClickListener {
+            val title = titleInput.text.toString()
+            val content = contentInput.text.toString()
+
+            if (title.isBlank() && content.isBlank()) {
+                Toast.makeText(this, "请先写点内容，再生成摘要～", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                try {
+                    summarizeButton.isEnabled = false
+                    summarizeButton.text = "生成中..."
+
+                    val summary = aiClient.summarizeNote(title, content)
+
+                    // 用对话框展示摘要，并给一个插入到内容里的选项
+                    AlertDialog.Builder(this@NoteDetailActivity)
+                        .setTitle("AI 摘要")
+                        .setMessage(summary)
+                        .setPositiveButton("插入到内容开头") { _, _ ->
+                            val existing = contentInput.text.toString()
+                            contentInput.setText("【摘要】$summary\n\n$existing")
+                        }
+                        .setNegativeButton("只看看", null)
+                        .show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@NoteDetailActivity,
+                        "生成摘要失败：${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } finally {
+                    summarizeButton.isEnabled = true
+                    summarizeButton.text = "AI 摘要"
+                }
+            }
+        }
+        // AI 生成主题标签
+        aiTagsButton.setOnClickListener {
+            val title = titleInput.text.toString()
+            val content = contentInput.text.toString()
+
+            if (title.isBlank() && content.isBlank()) {
+                Toast.makeText(this, "请先写点内容，再让 AI 帮你想标签～", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                try {
+                    aiTagsButton.isEnabled = false
+                    aiTagsButton.text = "生成中..."
+
+                    val tags = aiClient.suggestTopics(title, content)
+
+                    if (tags.isEmpty()) {
+                        Toast.makeText(this@NoteDetailActivity, "AI 没有生成任何标签。", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // 合并到 currentTags，当作普通标签处理；颜色就用默认颜色
+                        tags.forEach { tagName ->
+                            if (!currentTags.contains(tagName)) {
+                                currentTags.add(tagName)
+                                if (!tagColors.containsKey(tagName)) {
+                                    tagColors[tagName] = defaultColor
+                                }
+                            }
+                        }
+                        renderTagChips(chipGroup)
+                        Toast.makeText(
+                            this@NoteDetailActivity,
+                            "已添加标签：${tags.joinToString()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@NoteDetailActivity,
+                        "生成标签失败：${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } finally {
+                    aiTagsButton.isEnabled = true
+                    aiTagsButton.text = "AI 生成标签"
+                }
+            }
+        }
+
+
         //删除笔记暂时是只有在编辑的情况下才显示这个按钮，后面可能会要做一个往左滑动删除的功能
         deleteButton.setOnClickListener {
             existingNote?.let { note ->

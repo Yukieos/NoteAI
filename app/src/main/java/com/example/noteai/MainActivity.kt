@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
 import androidx.core.view.GravityCompat
 
+
 class MainActivity : AppCompatActivity() {
     //通过factory把dao给viewmodel
     private val viewModel: NotesViewModel by viewModels {
