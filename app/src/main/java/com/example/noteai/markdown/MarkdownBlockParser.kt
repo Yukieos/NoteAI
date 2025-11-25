@@ -46,6 +46,18 @@ class MarkdownBlockParser {
                     blocks.add(ContentBlock.HeadingBlock(line.substring(4), 3))
                     i++
                 }
+                line.startsWith("#### ") -> {
+                    blocks.add(ContentBlock.HeadingBlock(line.substring(5), 4))
+                    i++
+                }
+                line.startsWith("##### ") -> {
+                    blocks.add(ContentBlock.HeadingBlock(line.substring(6), 5))
+                    i++
+                }
+                line.startsWith("###### ") -> {
+                    blocks.add(ContentBlock.HeadingBlock(line.substring(7), 6))
+                    i++
+                }
                 
                 //列表：连续的 - 项被合并成一个列表块
                 //这样看起来更整齐，不用一行行处理

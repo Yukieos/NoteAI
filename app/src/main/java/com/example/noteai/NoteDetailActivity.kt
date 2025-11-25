@@ -60,7 +60,7 @@ class NoteDetailActivity : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.buttonSave)
         val deleteButton = findViewById<ImageButton>(R.id.buttonDelete)
         val backButton = findViewById<ImageButton>(R.id.buttonBack)
-        val togglePreviewButton = findViewById<ImageButton>(R.id.buttonTogglePreview)
+        val togglePreviewButton = findViewById<Button>(R.id.buttonTogglePreview)
         val chipGroup = findViewById<ChipGroup>(R.id.chipGroupTags)
         val addTagButton = findViewById<Button>(R.id.buttonAddTag)
         
@@ -260,14 +260,14 @@ class NoteDetailActivity : AppCompatActivity() {
         contentInput: EditText,
         previewContent: TextView,
         recyclerPreview: RecyclerView?,
-        togglePreviewButton: ImageButton
+        togglePreviewButton: Button
     ) {
         if (isPreviewMode) {
-            //进入预览模式：隐藏编辑框，显示预览
+            //进入预览模式：隐藏编辑框，显示预览，按钮显示"编辑"
             contentInput.isVisible = false
             previewContent.isVisible = false
-            togglePreviewButton.setImageResource(android.R.drawable.ic_menu_edit) //切换成编辑图标
-            
+            togglePreviewButton.text = "编辑"
+
             //高效渲染：用 RecyclerView 显示
             if (recyclerPreview != null) {
                 recyclerPreview.isVisible = true
@@ -280,11 +280,11 @@ class NoteDetailActivity : AppCompatActivity() {
                 previewContent.text = markdownParser.parse(contentInput.text.toString())
             }
         } else {
-            //回到编辑模式：显示编辑框，隐藏预览
+            //回到编辑模式：显示编辑框，隐藏预览，按钮显示"预览"
             contentInput.isVisible = true
             previewContent.isVisible = false
             if (recyclerPreview != null) recyclerPreview.isVisible = false
-            togglePreviewButton.setImageResource(android.R.drawable.ic_menu_view) //切换成眼睛图标
+            togglePreviewButton.text = "预览"
         }
     }
 
