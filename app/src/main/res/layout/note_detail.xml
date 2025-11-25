@@ -51,6 +51,17 @@
             android:visibility="gone"
             app:tint="@color/secondary_text" />
 
+        <!-- 眼睛按钮：切换编辑/预览模式 -->
+        <ImageButton
+            android:id="@+id/buttonTogglePreview"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="预览"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_view"
+            app:tint="@color/secondary_text" />
+
         <!-- 保存按钮，具体尺寸改minWidth=80dp textSize=14sp这里 -->
         <Button
             android:id="@+id/buttonSave"
@@ -136,21 +147,51 @@
                 android:layout_marginTop="24dp"
                 android:background="@color/search_background" />
 
-            <!-- 内容的输入，想更改高度大小直接改minHeight=400dp、textSize=16sp这里 -->
-            <EditText
-                android:id="@+id/inputContent"
+            <!-- 内容容器：包含编辑框、预览 TextView 和高效的 RecyclerView -->
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:background="@null"
-                android:gravity="top"
-                android:hint="开始写点什么..."
-                android:inputType="textMultiLine"
-                android:lineSpacingExtra="6dp"
-                android:minHeight="400dp"
-                android:textColor="@color/primary_text"
-                android:textColorHint="@color/secondary_text"
-                android:textSize="16sp" />
+                android:layout_marginTop="24dp">
+
+                <!-- 内容的输入，想更改高度大小直接改minHeight=400dp、textSize=16sp这里 -->
+                <EditText
+                    android:id="@+id/inputContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:gravity="top"
+                    android:hint="开始写点什么..."
+                    android:inputType="textMultiLine"
+                    android:lineSpacingExtra="6dp"
+                    android:minHeight="400dp"
+                    android:textColor="@color/primary_text"
+                    android:textColorHint="@color/secondary_text"
+                    android:textSize="16sp" />
+
+                <!-- 内容预览（富文本显示），初始不可见 -->
+                <TextView
+                    android:id="@+id/previewContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:minHeight="400dp"
+                    android:paddingHorizontal="0dp"
+                    android:paddingVertical="0dp"
+                    android:textColor="@color/primary_text"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    android:lineSpacingExtra="6dp" />
+
+                <!-- 高效预览：RecyclerView 虚拟滚动，只渲染可见内容 -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerContentPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="400dp"
+                    android:visibility="gone"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            </FrameLayout>
 
         </LinearLayout>
 
