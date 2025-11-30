@@ -106,7 +106,11 @@ class MarkdownContentAdapter(
             textView.textSize = when (block.level) {
                 1 -> 28f  //# 最大
                 2 -> 24f  //## 中等
-                else -> 20f //### 相对小一点
+                3 -> 20f  //### 相对小一点
+                4 -> 18f  //#### 更小
+                5 -> 16f  //##### 最小
+                6 -> 14f  //###### 最小的标题
+                else -> 20f //默认大小
             }
             //给标题留更多顶部空间
             textView.setPadding(12, 16, 12, 8)

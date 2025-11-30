@@ -68,7 +68,7 @@ class MarkdownParser {
                 continue
             }
             
-            // 处理标题行 # ## ###
+            // 处理标题行 # ## ### #### ##### ######
             when {
                 line.startsWith("# ") -> {
                     if (result.isNotEmpty()) result.append("\n")
@@ -83,6 +83,21 @@ class MarkdownParser {
                 line.startsWith("### ") -> {
                     if (result.isNotEmpty()) result.append("\n")
                     addHeading(result, line.substring(4), 1.1f)
+                    result.append("\n")
+                }
+                line.startsWith("#### ") -> {
+                    if (result.isNotEmpty()) result.append("\n")
+                    addHeading(result, line.substring(5), 1.0f)
+                    result.append("\n")
+                }
+                line.startsWith("##### ") -> {
+                    if (result.isNotEmpty()) result.append("\n")
+                    addHeading(result, line.substring(6), 0.95f)
+                    result.append("\n")
+                }
+                line.startsWith("###### ") -> {
+                    if (result.isNotEmpty()) result.append("\n")
+                    addHeading(result, line.substring(7), 0.9f)
                     result.append("\n")
                 }
                 // 处理列表 - 或 *
