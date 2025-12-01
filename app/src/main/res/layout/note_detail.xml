@@ -128,19 +128,41 @@
                 android:layout_marginTop="8dp"
                 app:chipSpacing="8dp" />
 
-            <!-- 添加标签按钮 -->
-            <Button
-                android:id="@+id/buttonAddTag"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+            <!-- 标签操作按钮行 -->
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:minWidth="100dp"
-                android:text="+ 添加标签"
-                android:textColor="@color/accent"
-                android:textSize="13sp"
-                app:cornerRadius="18dp"
-                app:strokeColor="@color/accent" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
+                <!-- 添加标签按钮 -->
+                <Button
+                    android:id="@+id/buttonAddTag"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:minWidth="100dp"
+                    android:text="+ 添加标签"
+                    android:textColor="@color/accent"
+                    android:textSize="13sp"
+                    app:cornerRadius="18dp"
+                    app:strokeColor="@color/accent" />
+                    
+                <!-- 图片按钮 -->
+                <Button
+                    android:id="@+id/buttonAddImage"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginLeft="8dp"
+                    android:contentDescription="添加图片"
+                    android:text="+ 添加图片"
+                    android:textColor="@color/accent"
+                    android:textSize="13sp"
+                    app:cornerRadius="18dp"
+                    app:strokeColor="@color/accent" />
+            </LinearLayout>
             <!-- AI 功能按钮行 -->
             <LinearLayout
                 android:id="@+id/layoutAiActions"

@@ -1,6 +1,10 @@
 //笔记的详情页也是编辑页
 package com.example.noteai
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -9,9 +13,12 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,6 +30,8 @@ import com.example.noteai.ai.AiClient
 import com.example.noteai.ai.OpenAiClient
 import com.example.noteai.data.NoteDatabase
 import com.example.noteai.data.NoteWithTags
+import com.example.noteai.image.ImagePicker
+import com.example.noteai.image.ImageUtils
 import com.example.noteai.markdown.MarkdownBlockParser
 import com.example.noteai.markdown.MarkdownParser
 import com.example.noteai.ui.NotesViewModel
@@ -31,6 +40,9 @@ import com.example.noteai.ui.MarkdownContentAdapter
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class NoteDetailActivity : AppCompatActivity() {
     private val viewModel: NotesViewModel by viewModels {
@@ -41,11 +53,16 @@ class NoteDetailActivity : AppCompatActivity() {
     private val tagColors = mutableMapOf<String, String>()
     private var existingNote: NoteWithTags? = null //如果是编辑旧笔记就放这
 
+    // 图片选择相关
+    private lateinit var pickImageLauncher: ActivityResultLauncher<Unit>
+    private lateinit var takePhotoLauncher: ActivityResultLauncher<Unit>
+
     private val defaultColor = "#E9E8E6" //我给一个默认颜色，后面parse失败就回退到它
     private val markdownParser = MarkdownParser() //用来把 markdown 转成富文本
     private val markdownBlockParser = MarkdownBlockParser() //用来把 markdown 分解成块，高效渲染
     private var isPreviewMode = false //记录当前是编辑还是预览模式
     private var contentAdapter: MarkdownContentAdapter? = null //预览模式用的适配器
+    private lateinit var contentInput: EditText // 内容输入框，提升为类成员变量
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +75,7 @@ class NoteDetailActivity : AppCompatActivity() {
         }
 
         val titleInput = findViewById<EditText>(R.id.inputTitle)
-        val contentInput = findViewById<EditText>(R.id.inputContent)
+        contentInput = findViewById<EditText>(R.id.inputContent) // 使用类成员变量
         val previewContent = findViewById<TextView>(R.id.previewContent)
         val saveButton = findViewById<Button>(R.id.buttonSave)
         val deleteButton = findViewById<ImageButton>(R.id.buttonDelete)
@@ -68,6 +85,7 @@ class NoteDetailActivity : AppCompatActivity() {
         val addTagButton = findViewById<Button>(R.id.buttonAddTag)
         val summarizeButton = findViewById<Button>(R.id.buttonSummarize)
         val aiTagsButton = findViewById<Button>(R.id.buttonAiTags)
+        val buttonAddImage = findViewById<Button>(R.id.buttonAddImage) // 新增图片按钮
         // 高效预览：用 RecyclerView 替代 TextView，支持虚拟滚动
         val recyclerPreview = findViewById<RecyclerView>(R.id.recyclerContentPreview)
         if (recyclerPreview != null) {
@@ -83,6 +101,9 @@ class NoteDetailActivity : AppCompatActivity() {
             updatePreviewMode(contentInput, previewContent, recyclerPreview, togglePreviewButton)
         }
         
+        // 添加图片按钮点击事件
+        buttonAddImage.setOnClickListener { showImagePickerDialog() }
+        
         //编辑内容时实时更新预览
         contentInput.doOnTextChanged { text, _, _, _ ->
             if (isPreviewMode && recyclerPreview != null) {
@@ -95,6 +116,8 @@ class NoteDetailActivity : AppCompatActivity() {
             }
         }
 
+        setupImagePickers()
+        
         //从Intent获取note id，如果有id说明是编辑，没有就是新建
         val noteId = intent.getLongExtra(EXTRA_NOTE_ID, 0L).takeIf { it != 0L }
 
@@ -358,6 +381,101 @@ class NoteDetailActivity : AppCompatActivity() {
         }
     }
     
+    // 设置图片选择器
+    private fun setupImagePickers() {
+        // 从相册选择图片
+        pickImageLauncher = registerForActivityResult(ImagePicker.PickImageFromGallery()) {
+            it?.let { uri -> handleImageSelected(uri) }
+        }
+        
+        // 拍照
+        takePhotoLauncher = registerForActivityResult(ImagePicker.TakePhoto()) {
+            it?.let { uri -> handleImageSelected(uri) }
+        }
+    }
+
+    private val CAMERA_PERMISSION_REQUEST_CODE = 100
+    
+    // 显示图片选择对话框
+    private fun showImagePickerDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("选择图片")
+            .setItems(arrayOf("从相册选择", "拍照")) { _, which ->
+                when (which) {
+                    0 -> pickImageLauncher.launch(Unit)
+                    1 -> {
+                        // 检查相机权限
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) 
+                                != PackageManager.PERMISSION_GRANTED) {
+                                // 请求相机权限
+                                ActivityCompat.requestPermissions(
+                                    this,
+                                    arrayOf(Manifest.permission.CAMERA),
+                                    CAMERA_PERMISSION_REQUEST_CODE
+                                )
+                            } else {
+                                // 已有权限，直接拍照
+                                takePhotoLauncher.launch(Unit)
+                            }
+                        } else {
+                            // Android 6.0以下不需要运行时权限
+                            takePhotoLauncher.launch(Unit)
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+    
+    // 处理权限请求结果
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                // 权限已授予，拍照
+                takePhotoLauncher.launch(Unit)
+            } else {
+                // 权限被拒绝，显示提示
+                Toast.makeText(this, "需要相机权限才能拍照", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // 处理选择的图片
+    private fun handleImageSelected(uri: Uri) {
+        try {
+            // 生成唯一的文件名
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "image_$timeStamp.jpg"
+            
+            // 保存图片到内部存储
+            val imagePath = ImageUtils.saveImageToInternalStorage(this, uri, fileName)
+            
+            // 生成Markdown图片语法并插入到当前光标位置
+            val markdownImage = ImageUtils.generateMarkdownImageSyntax(imagePath, "图片")
+            insertTextAtCursor(contentInput, markdownImage + "\n\n")
+            
+            Toast.makeText(this, "图片已插入", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "处理图片失败: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 在光标位置插入文本
+    private fun insertTextAtCursor(editText: EditText, text: String) {
+        val cursorPosition = editText.selectionStart
+        val editable = editText.text
+        editable.insert(cursorPosition, text)
+        // 移动光标到插入文本的末尾
+        editText.setSelection(cursorPosition + text.length)
+    }
+
     //切换编辑和预览模式。预览模式下显示 markdown 渲染的富文本，编辑模式下编辑源代码
     private fun updatePreviewMode(
         contentInput: EditText,

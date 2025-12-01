@@ -4,12 +4,17 @@ import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
 import com.example.noteai.R
+import com.example.noteai.image.ImageContentBlock
 import com.example.noteai.markdown.ContentBlock
 import android.graphics.drawable.GradientDrawable
+import android.widget.ProgressBar
+import android.widget.Toast
+import com.example.noteai.image.ImageUtils
 
 // 高效的 Markdown 内容适配器，用来在预览模式渲染各种内容块
 // 核心思想就是利用 RecyclerView 的虚拟滚动，只渲染屏幕可见的块
@@ -24,17 +29,23 @@ class MarkdownContentAdapter(
         private const val TYPE_CODE = 2      //代码块
         private const val TYPE_LIST = 3      //列表
         private const val TYPE_QUOTE = 4     //引用
+        private const val TYPE_IMAGE = 5     //图片
     }
 
     //根据内容块的类型返回对应的 ViewHolder 类型
     override fun getItemViewType(position: Int): Int {
-        return when (blocks[position]) {
-            is ContentBlock.TextBlock -> TYPE_TEXT
+        val block = blocks[position]
+        //检查是否是图片语法的文本块
+        if (block is ContentBlock.TextBlock && block.text.toString().matches(Regex("!\\[.*?\\]\\(.*?\\)"))) {
+            return TYPE_IMAGE
+        }
+        return when (block) {
             is ContentBlock.HeadingBlock -> TYPE_HEADING
             is ContentBlock.CodeBlock -> TYPE_CODE
             is ContentBlock.ListItemBlock -> TYPE_LIST
             is ContentBlock.QuoteBlock -> TYPE_QUOTE
             is ContentBlock.PlaceholderBlock -> TYPE_TEXT
+            else -> TYPE_TEXT
         }
     }
 
@@ -61,6 +72,10 @@ class MarkdownContentAdapter(
                 LayoutInflater.from(parent.context)
                     .inflate(android.R.layout.simple_list_item_1, parent, false)
             )
+            TYPE_IMAGE -> ImageViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_image_block, parent, false)
+            )
             else -> TextViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(android.R.layout.simple_list_item_1, parent, false)
@@ -77,6 +92,12 @@ class MarkdownContentAdapter(
             is CodeViewHolder -> holder.bind(block as ContentBlock.CodeBlock)
             is ListViewHolder -> holder.bind(block as ContentBlock.ListItemBlock)
             is QuoteViewHolder -> holder.bind(block as ContentBlock.QuoteBlock)
+            is ImageViewHolder -> {
+                // 确保只传递TextBlock类型
+                if (block is ContentBlock.TextBlock) {
+                    holder.bind(block)
+                }
+            }
         }
     }
 
@@ -165,6 +186,61 @@ class MarkdownContentAdapter(
             textView.background = layerDrawable
             //左边留出 12dp 放内容，右边和上下也留点空间
             textView.setPadding(12, 12, 12, 12)
+        }
+    }
+
+    //图片ViewHolder，负责渲染图片块
+    inner class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val imageView: ImageView = itemView.findViewById(R.id.imageView_content)
+        private val progressBar: ProgressBar = itemView.findViewById(R.id.progressBar)
+        private val errorText: TextView = itemView.findViewById(R.id.textView_error)
+
+        fun bind(block: ContentBlock.TextBlock) {
+            // 直接使用正则表达式提取图片路径
+            val text = block.text.toString()
+            val match = Regex("!\\[(.*?)\\]\\((.*?)\\)").find(text)
+            if (match != null && match.groupValues.size >= 3) {
+                val imagePath = match.groupValues[2]
+                val altText = match.groupValues[1]
+                
+                // 显示加载中状态
+                progressBar.visibility = View.VISIBLE
+                imageView.visibility = View.GONE
+                errorText.visibility = View.GONE
+                
+                // 设置alt text作为内容描述
+                imageView.contentDescription = altText
+                
+                // 直接加载图片，避免使用lifecycleScope
+                try {
+                    // 尝试从文件路径加载图片
+                    val bitmap = ImageUtils.loadBitmapFromPath(imagePath)
+                    if (bitmap != null) {
+                        imageView.setImageBitmap(bitmap)
+                        imageView.visibility = View.VISIBLE
+                        progressBar.visibility = View.GONE
+                        errorText.visibility = View.GONE
+                    } else {
+                        // 尝试从资源或其他来源加载
+                        errorText.text = "图片加载失败: $altText"
+                        errorText.visibility = View.VISIBLE
+                        progressBar.visibility = View.GONE
+                        imageView.visibility = View.GONE
+                    }
+                } catch (e: Exception) {
+                    errorText.text = "加载错误: ${e.message}"
+                    errorText.visibility = View.VISIBLE
+                    progressBar.visibility = View.GONE
+                    imageView.visibility = View.GONE
+                }
+            }
+        }
+
+        private fun showErrorState() {
+            progressBar.visibility = View.GONE
+            imageView.visibility = View.GONE
+            errorText.visibility = View.VISIBLE
+            errorText.text = "图片加载失败"
         }
     }
 }

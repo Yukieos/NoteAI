@@ -1,5 +1,10 @@
 package com.example.noteai.markdown
 
+import com.example.noteai.image.ImageContentBlock
+import com.example.noteai.image.ImageContentBlock.ImageBlock
+import java.util.regex.Pattern
+
+
 // 高效的 Markdown 块解析器
 // 这个解析器的思想很简单：把 Markdown 文本按块分割
 // 每个块是一个独立的内容（文本、代码、标题等）
@@ -75,6 +80,28 @@ class MarkdownBlockParser {
                 //引用：用 > 开头的行
                 line.startsWith("> ") -> {
                     blocks.add(ContentBlock.QuoteBlock(line.substring(2)))
+                    i++
+                }
+                
+                //图片：解析 ![alt text](path) 格式的图片语法
+                line.startsWith("![") -> {
+                    // 简单的图片语法解析
+                    val altTextEndIndex = line.indexOf("]")
+                    if (altTextEndIndex > 0) {
+                        val altText = if (altTextEndIndex > 2) line.substring(2, altTextEndIndex) else ""
+                        
+                        // 查找图片路径
+                        val pathStartIndex = line.indexOf("(", altTextEndIndex)
+                        val pathEndIndex = line.indexOf(")", pathStartIndex)
+                        
+                        if (pathStartIndex > 0 && pathEndIndex > pathStartIndex) {
+                            val imagePath = line.substring(pathStartIndex + 1, pathEndIndex)
+                            // 构建ImageBlock并转换为ContentBlock
+                            val imageBlock = ImageBlock(imagePath, altText)
+                            // 直接创建TextBlock表示图片
+                            blocks.add(ContentBlock.TextBlock("![$altText]($imagePath)"))
+                        }
+                    }
                     i++
                 }
                 
