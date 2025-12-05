@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">NoteAI</string>
+    <string name="search_notes">搜索笔记</string>
+    <string name="add_note">新建笔记</string>
+    <string name="note_title">标题</string>
+    <string name="note_content">内容</string>
+    <string name="note_tags_hint">标签（逗号分隔）</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="last_updated_format">更新：%1$s</string>
+    <string name="empty_notes">暂无笔记，点击右下角 + 开始记录。</string>
+    <string name="note_not_found">未找到笔记</string>
+    <string name="manage_tags">管理标签</string>
+    <string name="add_tag">添加标签</string>
+    <string name="add_tag_confirm">添加</string>
+    <string name="tag_exists">标签已存在</string>
+</resources>

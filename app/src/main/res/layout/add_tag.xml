@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 添加标签的弹窗+选择颜色 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="添加标签"
+        android:textColor="@color/primary_text"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <!-- 已有标签选择 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="选择已有标签"
+        android:textColor="@color/secondary_text"
+        android:textSize="14sp" />
+
+    <!-- 已有标签最多显示 120dp，想改高度直接改maxHeight -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:maxHeight="120dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupExistingTags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:chipSpacing="6dp"
+            app:singleSelection="false" />
+
+    </ScrollView>
+
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="16dp"
+        android:background="@color/search_background" />
+
+    <!-- 创建新标签 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="或创建新标签"
+        android:textColor="@color/secondary_text"
+        android:textSize="14sp" />
+
+    <!-- 标签名称输入 -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="标签名称"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputTagName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="选择颜色"
+        android:textColor="@color/secondary_text"
+        android:textSize="14sp" />
+
+    <!-- tag中的那个颜色选择器，columnCount/rowCount控制可视格子布局 -->
+    <GridLayout
+        android:id="@+id/gridColors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:columnCount="4"
+        android:rowCount="2">
+
+        <!-- 灰色，48dp控制色块尺寸，backgroundTint可以换成任意颜色（下面都是类似的） -->
+        <View
+            android:id="@+id/colorGray"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_gray"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 蓝色 -->
+        <View
+            android:id="@+id/colorBlue"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_blue"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 绿色 -->
+        <View
+            android:id="@+id/colorGreen"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_green"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 黄色 -->
+        <View
+            android:id="@+id/colorYellow"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_yellow"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 橙色 -->
+        <View
+            android:id="@+id/colorOrange"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_orange"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 红色 -->
+        <View
+            android:id="@+id/colorRed"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_red"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 粉色 -->
+        <View
+            android:id="@+id/colorPink"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_pink"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- 紫色 -->
+        <View
+            android:id="@+id/colorPurple"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="8dp"
+            android:background="@drawable/color_circle"
+            android:backgroundTint="@color/tag_purple"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </GridLayout>
+
+    <!-- 按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonCancel"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="取消"
+            android:textColor="@color/secondary_text" />
+
+        <Button
+            android:id="@+id/buttonAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:backgroundTint="@color/accent"
+            android:text="添加"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>
+
