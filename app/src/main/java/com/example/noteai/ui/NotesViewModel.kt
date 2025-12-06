@@ -23,7 +23,23 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
     val allTags: StateFlow<List<Tag>> = _allTags.asStateFlow()
 
     //当前选中的标签filter
-    private val selectedTags = mutableSetOf<String>()
+    //val selectedTags = mutableSetOf<String>()
+    private val _selectedTags = MutableStateFlow<Set<String>>(emptySet())
+    val selectedTags: StateFlow<Set<String>> = _selectedTags.asStateFlow()
+    fun toggleTagSelection(tag: String, isChecked: Boolean) {
+        val current = _selectedTags.value.toMutableSet()
+
+        if (isChecked) {
+            current.add(tag)
+        } else {
+            current.remove(tag)
+        }
+        _selectedTags.value = current
+
+        // 套用原有的过滤逻辑
+        applyFilter()
+    }
+
     private var allNotesList = emptyList<NoteWithTags>() //保存所有笔记，后面好去filter
 
     init {
@@ -50,24 +66,29 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
 
     //如果user点击某个chip的时候就call这个函数，选中了加入一个filter，没选中就remove一个filter
     fun toggleTagFilter(tagName: String) {
-        if (selectedTags.contains(tagName)) {
-            selectedTags.remove(tagName)
-        } else {
-            selectedTags.add(tagName)
-        }
-        applyFilter()
+        // 判断当前是否已选中
+        val isSelectedNow = _selectedTags.value.contains(tagName)
+        // 反转勾选状态，交给新方法处理
+        toggleTagSelection(tagName, !isSelectedNow)
     }
+
 
     //这里根据选择的tag过滤allnoteslist来更新我们内部的_notes
     private fun applyFilter() {
-        _notes.value = if (selectedTags.isEmpty()) {
+        // 先把 StateFlow 里的集合取出来
+        val selected = _selectedTags.value   // 或者 selectedTags.value 也可以
+
+        _notes.value = if (selected.isEmpty()) {
             allNotesList
         } else {
             allNotesList.filter { noteWithTags ->
-                noteWithTags.tags.any { tag -> selectedTags.contains(tag.name) }
+                noteWithTags.tags.any { tag ->
+                    selected.contains(tag.name)
+                }
             }
         }
     }
+
     //如果user在我们搜索文字框里写任何东西，用这个函数来update我们给db的query（功能如函数其名）
     fun updateSearchQuery(query: String) {
         viewModelScope.launch {
@@ -136,14 +157,14 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
         }
     }
     
-    fun deleteTag(tag: Tag) {
+    /**fun deleteTag(tag: Tag) {
         viewModelScope.launch {
             //删除tag之前，如果这个tag在filter的列表里我们就移除
             selectedTags.remove(tag.name)
             noteDao.deleteTag(tag)
             applyFilter() //重新应用filter
         }
-    }
+    }*/
 
     //从某个笔记删除某个tag
     fun removeTagFromNote(note: Note, tagName: String) {

@@ -22,7 +22,7 @@ class OpenAiClient(
     private val baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 
     private val model = "qwen-plus"
-// 你可以根据自己账户情况换成别的
+
 
     override suspend fun summarizeNote(title: String, content: String): String =
         withContext(Dispatchers.IO) {
@@ -69,6 +69,8 @@ class OpenAiClient(
     private fun buildChatRequest(userPrompt: String): JSONObject {
         return JSONObject().apply {
             put("model", model)
+           put("temperature", 0.5)//使得每次生成的摘要不同，0为稳定
+
             put(
                 "messages",
                 JSONArray().apply {
