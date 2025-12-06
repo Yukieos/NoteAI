@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //监听notes的flow 同时更新主页面和sidebar（sidebar就是一个笔记的listview！
-        lifecycleScope.launch {
+        /**lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.notes.collect { notes ->
                     noteAdapter.submitList(notes)
@@ -141,10 +141,10 @@ class MainActivity : AppCompatActivity() {
                     emptyView.isVisible = notes.isEmpty()
                 }
             }
-        }
+        }*/
 
         //监听tags的flow，点击chip切换filter，长按删除tag（我之前没有设计好，应该用一个viewmodel来管理这个filter的state，然后UI监听这个stateflow，state一变UI自动刷新）
-        lifecycleScope.launch {
+        /**lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.allTags.collect { tags ->
                     chipGroup.removeAllViews()
@@ -175,11 +175,60 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }*/
+// 让首帧先画出来，再开始收集数据库数据
+        window.decorView.post {
+            startCollectingNotes()
+            startCollectingTags()
         }
-
         //初始化一下UI状态（尤其是fab的行为）
         updateSelectionUI()
     }
+    private fun startCollectingNotes() {
+        val emptyView = findViewById<TextView>(R.id.textEmpty)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.notes.collect { notes ->
+                    // 这里用原来 onCreate 里那段更新 UI 的逻辑
+                    noteAdapter.submitList(notes)
+                    sidebarAdapter.submitList(notes)
+                    emptyView.isVisible = notes.isEmpty()
+                }
+            }
+        }
+    }
+
+    private fun startCollectingTags() {
+        val chipGroup = findViewById<ChipGroup>(R.id.chipGroupTags)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.allTags.collect { tags ->
+                    // 每次先清空
+                    chipGroup.removeAllViews()
+
+                    tags.forEach { tag ->
+                        val chip = Chip(this@MainActivity).apply {
+                            text = tag.name
+                            isCheckable = true
+
+                            // 从 ViewModel 里取当前已选的标签集合，决定初始是否选中
+                            isChecked = viewModel.selectedTags.value.contains(tag.name)
+
+                            // 当用户勾选 / 取消这个 tag 时，通知 ViewModel
+                            setOnCheckedChangeListener { _, isChecked ->
+                                viewModel.toggleTagSelection(tag.name, isChecked)
+                            }
+                        }
+
+                        chipGroup.addView(chip)
+                    }
+                }
+            }
+        }
+    }
+
 
     //长按进入多选模式/批量选择模式后，选择一个/取消选择一个笔记。多选模式和批量选择其实是一个东西，批量选择一堆笔记=多选了很多笔记，到时候好一起删掉。
     //其实我有一个想法就是可以设置folder+笔记，比如说多个笔记在一个folder里，或者是在笔记里的笔记。可能有点复杂啊到时候需要新的这个viewmodel啥的了后面有时间再说吧。
