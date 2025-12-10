@@ -65,4 +65,11 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // Markwon 核心 (必须)
+    implementation("io.noties.markwon:core:4.6.2")
+    // 代码高亮插件 (优化 CodeBlock)
+   // implementation("io.noties.markwon:syntax-highlight:4.6.0")
+  //  implementation("io.noties.prism4j:prism4j:2.0.0")
+    // 表格插件 (可选，优化 AI 生成的表格)
+    implementation("io.noties.markwon:ext-tables:4.6.2")
 }

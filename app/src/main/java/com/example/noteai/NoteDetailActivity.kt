@@ -89,7 +89,7 @@ class NoteDetailActivity : AppCompatActivity() {
         // 高效预览：用 RecyclerView 替代 TextView，支持虚拟滚动
         val recyclerPreview = findViewById<RecyclerView>(R.id.recyclerContentPreview)
         if (recyclerPreview != null) {
-            contentAdapter = MarkdownContentAdapter(emptyList())
+            contentAdapter = MarkdownContentAdapter(this,emptyList())
             recyclerPreview.adapter = contentAdapter
         }
 
@@ -109,7 +109,7 @@ class NoteDetailActivity : AppCompatActivity() {
             if (isPreviewMode && recyclerPreview != null) {
                 //用高效的块解析器，而不是一次性渲染整个文档
                 val blocks = markdownBlockParser.parseToBlocks(text?.toString().orEmpty())
-                contentAdapter = MarkdownContentAdapter(blocks)
+                contentAdapter = MarkdownContentAdapter(this,blocks)
                 recyclerPreview.adapter = contentAdapter
             } else if (isPreviewMode) {
                 previewContent.text = markdownParser.parse(text?.toString().orEmpty())
@@ -493,7 +493,7 @@ class NoteDetailActivity : AppCompatActivity() {
             if (recyclerPreview != null) {
                 recyclerPreview.isVisible = true
                 val blocks = markdownBlockParser.parseToBlocks(contentInput.text.toString())
-                contentAdapter = MarkdownContentAdapter(blocks)
+                contentAdapter = MarkdownContentAdapter(this,blocks)
                 recyclerPreview.adapter = contentAdapter
             } else {
                 // 备用方案：用 TextView
