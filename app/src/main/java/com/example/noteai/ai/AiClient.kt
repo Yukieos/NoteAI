@@ -6,7 +6,7 @@ package com.example.noteai.ai
  */
 interface AiClient {
 
-    //用 OpenAI 给笔记生成 1–2 句摘要，保持原文语言
+    //用AI给笔记生成 1–2 句摘要，保持原文语言
     suspend fun summarizeNote(
         title: String,
         content: String

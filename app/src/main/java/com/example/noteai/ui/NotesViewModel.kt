@@ -107,6 +107,11 @@ class NotesViewModel(private val noteDao: NoteDao) : ViewModel() {
             }
         }
     }
+    fun deleteTag(tag: Tag) {
+        viewModelScope.launch {
+            noteDao.deleteTag(tag)
+        }
+    }
     //id如果是空的说明这个笔记是一个新的，否则这个笔记已经存在了属于是更新
     fun saveNote(
         id: Long?,
