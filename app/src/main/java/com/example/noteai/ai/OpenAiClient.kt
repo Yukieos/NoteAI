@@ -12,7 +12,7 @@ import org.json.JSONObject
 import java.io.IOException
 
 /**
- * 用 OkHttp + Chat Completions 调用 OpenAI。
+ * 用 OkHttp + Chat Completions 调用AI。
  * 只实现 AiClient 接口，不依赖任何 Activity / Room。
  */
 class OpenAiClient(

@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.notes.collect { notes ->
-                    // 这里用原来 onCreate 里那段更新 UI 的逻辑
+
                     noteAdapter.submitList(notes)
                     sidebarAdapter.submitList(notes)
                     emptyView.isVisible = notes.isEmpty()
@@ -220,6 +220,21 @@ class MainActivity : AppCompatActivity() {
                             setOnCheckedChangeListener { _, isChecked ->
                                 viewModel.toggleTagSelection(tag.name, isChecked)
                             }
+                            setOnLongClickListener {
+                                androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                                    .setTitle("删除标签")
+                                    .setMessage("确定要删除标签 \"${tag.name}\" 吗？所有笔记中的这个标签都会被移除。")
+                                    .setPositiveButton("删除") { _, _ ->
+                                        // 取消筛选状态，避免 UI 残留
+                                        viewModel.toggleTagSelection(tag.name, false)
+                                        // 删除标签本身（NoteDao.deleteTag 会顺带处理关系）
+                                        viewModel.deleteTag(tag)
+                                    }
+                                    .setNegativeButton("取消", null)
+                                    .show()
+                                true
+                            }
+
                         }
 
                         chipGroup.addView(chip)
