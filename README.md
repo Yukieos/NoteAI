@@ -47,7 +47,3 @@ Detail view (note editor and tag manager):
 
 - Improve content rendering in the note body (support for code blocks, rich text, and other inline rendering)
 - Add synchronisation or backup options
-
-## Notes
-
-If you'd like the README phrasing adjusted, more detailed usage instructions, or a short "How to run" section for building the Android app, tell me which platform/gradle commands you'd prefer and I will add that.
